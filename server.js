@@ -1,4 +1,10 @@
 const io = require('socket.io')();
+const redis = require('redis');
+const client = redis.createClient({
+    prefix: 'draw-'
+});
+const { promisify } = require('util');
+const get = promisify(client.get).bind(client);
 
 let lines_buffer = [];
 let messages_buffer = [];
@@ -12,6 +18,9 @@ let words = [
     'test3',
     'test4'
 ]
+
+client.set('test', 'blabla');
+get('test').then(b => console.log(b));
 
 function arrayRand(arr) {
     return arr[Math.floor(Math.random() * arr.length)];
@@ -51,7 +60,7 @@ io.on('connection', client => {
             console.log(rightGuess);        
             client.broadcast.emit('game_over', {});
         }
-        if (messages_buffer.length > 10)
+        if (messages_buffer.length >= 10)
             messages_buffer.shift();
         messages_buffer.push(message);
         client.emit('message', message);
